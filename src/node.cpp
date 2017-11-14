@@ -27,12 +27,14 @@ public:
 
 public:
 	static  MObject		aCurve;
+	static  MObject		aControls;
 	static  MObject		aTaperCurve;
 	static	MTypeId		nodeId;
 };
 
 MTypeId	NodeSmartExtrude::nodeId( 0x000fd );
 MObject	NodeSmartExtrude::aCurve;
+MObject	NodeSmartExtrude::aControls;
 MObject	NodeSmartExtrude::aTaperCurve;
 
 NodeSmartExtrude::NodeSmartExtrude() {}
@@ -60,12 +62,30 @@ MStatus NodeSmartExtrude::initialize() {
 	MStatus				stat;
 
 	NodeSmartExtrude::aCurve = tAttr.create("inputCurve", "ic", MFnData::kNurbsCurve);
+
+	NodeSmartExtrude::aControls = tAttr.create("controls", "cc", MFnData::kMatrix);
+	tAttr.setArray(true);
+	tAttr.setReadable(false);
 	
 	stat = addAttribute(NodeSmartExtrude::aCurve);
 		if (!stat) { stat.perror("addAttribute"); return stat;}
 
+	stat = addAttribute(NodeSmartExtrude::aControls);
+		if (!stat) { stat.perror("addAttribute"); return stat;}
+
 	return MS::kSuccess;
 }
+
+
+
+
+
+
+
+
+/////////////////////////////////
+///// PLUGIN INITIALIZATION /////
+/////////////////////////////////
 
 MStatus initializePlugin(MObject obj) {
 	MStatus   status;
