@@ -5,6 +5,8 @@
 #include <maya/MPxNode.h> 
 
 #include <maya/MFnTypedAttribute.h>
+#include <maya/MFnCompoundAttribute.h>
+#include <maya/MFnNumericAttribute.h>
 #include <maya/MFnPlugin.h>
 #include <maya/MFnData.h>
 
@@ -29,13 +31,21 @@ public:
 	static  MObject		aCurve;
 	static  MObject		aControls;
 	static  MObject		aTaperCurve;
+
+	static  MObject		aTaperCurveValue;
+	static  MObject		aTaperCurvePosition;
+
 	static	MTypeId		nodeId;
 };
 
-MTypeId	NodeSmartExtrude::nodeId( 0x000fd );
 MObject	NodeSmartExtrude::aCurve;
 MObject	NodeSmartExtrude::aControls;
 MObject	NodeSmartExtrude::aTaperCurve;
+
+MObject	NodeSmartExtrude::aTaperCurveValue;
+MObject	NodeSmartExtrude::aTaperCurvePosition;
+
+MTypeId	NodeSmartExtrude::nodeId( 0x000fd );
 
 NodeSmartExtrude::NodeSmartExtrude() {}
 NodeSmartExtrude::~NodeSmartExtrude() {}
@@ -58,21 +68,35 @@ void* NodeSmartExtrude::create() {
 }
 
 MStatus NodeSmartExtrude::initialize() {
-	MFnTypedAttribute 	tAttr;
-	MStatus				stat;
+	MFnTypedAttribute 		tAttr;
+	MFnCompoundAttribute	cAttr;
+	MFnNumericAttribute		nAttr;
+	MStatus					stat;
 
-	NodeSmartExtrude::aCurve = tAttr.create("inputCurve", "ic", MFnData::kNurbsCurve);
+	aCurve = tAttr.create("inputCurve", "ic", MFnData::kNurbsCurve);
+	addAttribute(aCurve);
 
-	NodeSmartExtrude::aControls = tAttr.create("controls", "cc", MFnData::kMatrix);
+	aControls = tAttr.create("controls", "cc", MFnData::kMatrix);
 	tAttr.setArray(true);
 	tAttr.setReadable(false);
+	addAttribute(aControls);
 	
-	stat = addAttribute(NodeSmartExtrude::aCurve);
-		if (!stat) { stat.perror("addAttribute"); return stat;}
+	aTaperCurveValue = nAttr.create("value", "v", MFnNumericData::kFloat, 1.0);
+	nAttr.setWritable(false);
+	addAttribute(aTaperCurveValue);
 
-	stat = addAttribute(NodeSmartExtrude::aControls);
-		if (!stat) { stat.perror("addAttribute"); return stat;}
-
+	aTaperCurvePosition = nAttr.create("position", "p", MFnNumericData::kFloat, 0.0);
+	nAttr.setWritable(false);
+	addAttribute(aTaperCurvePosition);
+	
+	aTaperCurve = cAttr.create("taperCurve", "tc");
+	cAttr.addChild(aTaperCurveValue);
+	cAttr.addChild(aTaperCurvePosition);
+	cAttr.setArray(true);
+	cAttr.setWritable(false);
+	addAttribute(aTaperCurve);
+	
+	
 	return MS::kSuccess;
 }
 
