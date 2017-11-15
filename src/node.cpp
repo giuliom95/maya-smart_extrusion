@@ -29,9 +29,12 @@ public:
 
 public:
 	static  MObject		aCurve;
-	static  MObject		aControls;
-	static  MObject		aTaperCurve;
 
+	static  MObject		aControls;
+	static  MObject		aControlsMatrix;
+	static  MObject		aControlsValue;
+
+	static  MObject		aTaperCurve;
 	static  MObject		aTaperCurveValue;
 	static  MObject		aTaperCurvePosition;
 
@@ -39,9 +42,12 @@ public:
 };
 
 MObject	NodeSmartExtrude::aCurve;
-MObject	NodeSmartExtrude::aControls;
-MObject	NodeSmartExtrude::aTaperCurve;
 
+MObject	NodeSmartExtrude::aControls;
+MObject	NodeSmartExtrude::aControlsMatrix;
+MObject	NodeSmartExtrude::aControlsValue;
+
+MObject	NodeSmartExtrude::aTaperCurve;
 MObject	NodeSmartExtrude::aTaperCurveValue;
 MObject	NodeSmartExtrude::aTaperCurvePosition;
 
@@ -76,26 +82,39 @@ MStatus NodeSmartExtrude::initialize() {
 	aCurve = tAttr.create("inputCurve", "ic", MFnData::kNurbsCurve);
 	addAttribute(aCurve);
 
-	aControls = tAttr.create("controls", "cc", MFnData::kMatrix);
-	tAttr.setArray(true);
-	tAttr.setReadable(false);
-	addAttribute(aControls);
-	
-	aTaperCurveValue = nAttr.create("value", "v", MFnNumericData::kFloat, 1.0);
-	nAttr.setWritable(false);
-	addAttribute(aTaperCurveValue);
+	/* "Controls" attribute */ {
+		aControlsMatrix = tAttr.create("controlMatrix", "cm", MFnData::kMatrix);
+		tAttr.setReadable(false);
+		addAttribute(aControlsMatrix);
 
-	aTaperCurvePosition = nAttr.create("position", "p", MFnNumericData::kFloat, 0.0);
-	nAttr.setWritable(false);
-	addAttribute(aTaperCurvePosition);
-	
-	aTaperCurve = cAttr.create("taperCurve", "tc");
-	cAttr.addChild(aTaperCurveValue);
-	cAttr.addChild(aTaperCurvePosition);
-	cAttr.setArray(true);
-	cAttr.setWritable(false);
-	addAttribute(aTaperCurve);
-	
+		aControlsValue = nAttr.create("controlValue", "cv", MFnNumericData::kFloat, 1.0);
+		nAttr.setReadable(false);
+		addAttribute(aControlsValue);
+
+		aControls = cAttr.create("controls", "cc");
+		cAttr.addChild(aControlsMatrix);
+		cAttr.addChild(aControlsValue);
+		cAttr.setArray(true);
+		cAttr.setReadable(false);
+		addAttribute(aControls);
+	}
+
+	/* "Taper Curve" attribute */ {
+		aTaperCurveValue = nAttr.create("value", "v", MFnNumericData::kFloat, 1.0);
+		nAttr.setWritable(false);
+		addAttribute(aTaperCurveValue);
+
+		aTaperCurvePosition = nAttr.create("position", "p", MFnNumericData::kFloat, 0.0);
+		nAttr.setWritable(false);
+		addAttribute(aTaperCurvePosition);
+		
+		aTaperCurve = cAttr.create("taperCurve", "tc");
+		cAttr.addChild(aTaperCurveValue);
+		cAttr.addChild(aTaperCurvePosition);
+		cAttr.setArray(true);
+		cAttr.setWritable(false);
+		addAttribute(aTaperCurve);
+	}
 	
 	return MS::kSuccess;
 }
