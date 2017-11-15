@@ -10,10 +10,9 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MFnData.h>
 
-#include <maya/MString.h> 
+#include <maya/MString.h>
 #include <maya/MTypeId.h> 
 #include <maya/MPlug.h>
-#include <maya/MVector.h>
 #include <maya/MDataBlock.h>
 #include <maya/MDataHandle.h>
  
@@ -31,8 +30,8 @@ public:
 	static  MObject		aCurve;
 
 	static  MObject		aControls;
-	static  MObject		aControlsMatrix;
-	static  MObject		aControlsValue;
+	static  MObject		aControlsScale;
+	static  MObject		aControlsPosition;
 
 	static  MObject		aTaperCurve;
 	static  MObject		aTaperCurveValue;
@@ -44,24 +43,50 @@ public:
 MObject	NodeSmartExtrude::aCurve;
 
 MObject	NodeSmartExtrude::aControls;
-MObject	NodeSmartExtrude::aControlsMatrix;
-MObject	NodeSmartExtrude::aControlsValue;
+MObject	NodeSmartExtrude::aControlsScale;
+MObject	NodeSmartExtrude::aControlsPosition;
 
 MObject	NodeSmartExtrude::aTaperCurve;
 MObject	NodeSmartExtrude::aTaperCurveValue;
 MObject	NodeSmartExtrude::aTaperCurvePosition;
 
-MTypeId	NodeSmartExtrude::nodeId( 0x000fd );
+MTypeId	NodeSmartExtrude::nodeId{0x000fd};
 
 NodeSmartExtrude::NodeSmartExtrude() {}
 NodeSmartExtrude::~NodeSmartExtrude() {}
 
-MStatus NodeSmartExtrude::compute( const MPlug& plug, MDataBlock& data ) {
+MStatus NodeSmartExtrude::compute(const MPlug& plug, MDataBlock& data) {
 	
 	MStatus stat;
  
-	if(plug == NodeSmartExtrude::aTaperCurve) {	
+	if(plug == aTaperCurveValue || plug == aTaperCurvePosition) {	
 		
+		auto controlsHandle = data.inputArrayValue(aControls);
+
+		auto taperCurveHandle = data.outputArrayValue(aTaperCurve);
+
+		do {
+
+			// Fetch output handles
+			auto taperCurveCVHandle = taperCurveHandle.outputValue();
+			auto taperCurveValueHandle = taperCurveCVHandle.child(aTaperCurveValue);
+			auto taperCurvePositionHandle = taperCurveCVHandle.child(aTaperCurvePosition);
+
+			auto controlHandle = controlsHandle.inputValue();
+			auto controlScale = controlHandle.child(aControlsScale).asFloat3();
+			auto controlPosition = controlHandle.child(aControlsPosition).asFloat();
+
+			double outValue = controlScale[0];
+			outValue = outValue < controlScale[1] ? controlScale[1] : outValue;
+			outValue = outValue < controlScale[2] ? controlScale[2] : outValue;
+
+			taperCurveValueHandle.setFloat(outValue);
+			taperCurvePositionHandle.setFloat(controlPosition);
+			
+			controlsHandle.next();
+		} while(taperCurveHandle.next());
+
+		data.setClean(plug);
 	} else {
 		return MS::kUnknownParameter;
 	}
@@ -83,17 +108,17 @@ MStatus NodeSmartExtrude::initialize() {
 	addAttribute(aCurve);
 
 	/* "Controls" attribute */ {
-		aControlsMatrix = tAttr.create("controlMatrix", "cm", MFnData::kMatrix);
-		tAttr.setReadable(false);
-		addAttribute(aControlsMatrix);
-
-		aControlsValue = nAttr.create("controlValue", "cv", MFnNumericData::kFloat, 1.0);
+		aControlsScale = nAttr.createPoint("controlScale", "cs");
 		nAttr.setReadable(false);
-		addAttribute(aControlsValue);
+		addAttribute(aControlsScale);
+
+		aControlsPosition = nAttr.create("controlPosition", "cp", MFnNumericData::kFloat, 1.0);
+		nAttr.setReadable(false);
+		addAttribute(aControlsPosition);
 
 		aControls = cAttr.create("controls", "cc");
-		cAttr.addChild(aControlsMatrix);
-		cAttr.addChild(aControlsValue);
+		cAttr.addChild(aControlsScale);
+		cAttr.addChild(aControlsPosition);
 		cAttr.setArray(true);
 		cAttr.setReadable(false);
 		addAttribute(aControls);
@@ -115,6 +140,8 @@ MStatus NodeSmartExtrude::initialize() {
 		cAttr.setWritable(false);
 		addAttribute(aTaperCurve);
 	}
+
+	attributeAffects(aControls, aTaperCurve);
 	
 	return MS::kSuccess;
 }
