@@ -29,10 +29,17 @@ public:
 public:
 	static  MObject		aCurve;
 
+	// Input of scale and position on the taper curve of the control circles
 	static  MObject		aControls;
 	static  MObject		aControlsScale;
 	static  MObject		aControlsPosition;
 
+	// Out rotation and translation of the control circles
+	static	MObject		aRototranslation;
+	static	MObject		aControlsTranslation;
+	static	MObject		aControlsRotation;
+
+	// Parameters of the taper curve
 	static  MObject		aTaperCurve;
 	static  MObject		aTaperCurveValue;
 	static  MObject		aTaperCurvePosition;
@@ -45,6 +52,10 @@ MObject	NodeSmartExtrude::aCurve;
 MObject	NodeSmartExtrude::aControls;
 MObject	NodeSmartExtrude::aControlsScale;
 MObject	NodeSmartExtrude::aControlsPosition;
+
+MObject	NodeSmartExtrude::aRototranslation;
+MObject	NodeSmartExtrude::aControlsTranslation;
+MObject	NodeSmartExtrude::aControlsRotation;
 
 MObject	NodeSmartExtrude::aTaperCurve;
 MObject	NodeSmartExtrude::aTaperCurveValue;
@@ -122,6 +133,23 @@ MStatus NodeSmartExtrude::initialize() {
 		cAttr.setArray(true);
 		cAttr.setReadable(false);
 		addAttribute(aControls);
+	}
+
+	/* "Rototranslation" attribute */ {
+		aControlsTranslation = nAttr.createPoint("controlTranslation", "ct");
+		nAttr.setWritable(false);
+		addAttribute(aControlsTranslation);
+
+		aControlsRotation = nAttr.createPoint("controlRotation", "cr");
+		nAttr.setWritable(false);
+		addAttribute(aControlsRotation);
+
+		aRototranslation = cAttr.create("controlsRototranslation", "crt");
+		cAttr.addChild(aControlsTranslation);
+		cAttr.addChild(aControlsRotation);
+		cAttr.setArray(true);
+		cAttr.setWritable(false);
+		addAttribute(aRototranslation);
 	}
 
 	/* "Taper Curve" attribute */ {
